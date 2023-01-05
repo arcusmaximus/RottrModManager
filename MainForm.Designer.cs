@@ -175,6 +175,7 @@ namespace RottrModManager
             this.Controls.Add(this._lvMods);
             this.Controls.Add(this._statusBar);
             this.Controls.Add(this._pnlToolbar);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MinimumSize = new System.Drawing.Size(360, 320);
             this.Name = "MainForm";
             this.Text = "ROTTR Mod Manager";
