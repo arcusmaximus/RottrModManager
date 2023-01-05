@@ -11,4 +11,7 @@ Features:
 * Individual mods can be removed or even temporarily disabled, without having to start from scratch and reinstalling all the other mods.
 * Automatically reinstalls mods when a change in the original game files is detected (e.g. because a DLC was installed).
 
+Limitations:
+* Currently only meshes, textures, and .dtp files are supported.
+
 [Download](https://github.com/arcusmaximus/RottrModManager/releases)
