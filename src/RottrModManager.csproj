@@ -135,9 +135,6 @@
     <None Include="Resources\Reinstall.png" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="ilmerge">
-      <Version>3.0.41</Version>
-    </PackageReference>
     <PackageReference Include="Ookii.Dialogs.WinForms">
       <Version>4.0.0</Version>
     </PackageReference>
