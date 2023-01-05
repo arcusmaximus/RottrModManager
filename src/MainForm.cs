@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -29,6 +30,9 @@ namespace RottrModManager
         {
             _archiveSet = new ArchiveSet(gameFolderPath);
             _resourceUsageCache = new ResourceUsageCache(_archiveSet);
+
+            Version version = Assembly.GetEntryAssembly().GetName().Version;
+            Text += $" {version.Major}.{version.Minor}.{version.Build}";
         }
 
         private async void MainForm_Load(object sender, EventArgs e)

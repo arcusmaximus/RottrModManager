@@ -8,7 +8,9 @@ namespace RottrModManager.Cdc
         {
             return Path.GetExtension(filePath) switch
                    {
+                       ".anim" => ResourceType.Animation,
                        ".dtp" => ResourceType.Dtp,
+                       ".sound" => ResourceType.Sound,
                        ".tr2mesh" => ResourceType.Mesh,
                        ".tr2pcd" => ResourceType.Texture,
                        _ => ResourceType.Unknown
