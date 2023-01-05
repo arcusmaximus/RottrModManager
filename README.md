@@ -12,6 +12,6 @@ Features:
 * Automatically reinstalls mods when a change in the original game files is detected (e.g. because a DLC was installed).
 
 Limitations:
-* Currently only meshes, textures, and .dtp files are supported.
+* While meshes and textures in the mod are matched to the game files by name rather than index (and should therefore always be installed reliably), other resources like sounds, animations and .dtp files don't have a name and are therefore matched by their index (among resources of the same type), which may not always work.
 
 [Download](https://github.com/arcusmaximus/RottrModManager/releases)
