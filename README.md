@@ -1,4 +1,4 @@
-# RottrModManager
+# ROTTR Mod Manager
 Mod manager for Rise of the Tomb Raider.
 
 ![Screenshot](Screenshot.png)
@@ -10,3 +10,5 @@ Features:
 * Can install mods from a folder or straight from a .zip, .7z, or .rar archive, either using the toolbar buttons or by drag&drop onto the window or .exe.
 * Individual mods can be removed or even temporarily disabled, without having to start from scratch and reinstalling all the other mods.
 * Automatically reinstalls mods when a change in the original game files is detected (e.g. because a DLC was installed).
+
+[Download](https://github.com/arcusmaximus/RottrModManager/releases)
