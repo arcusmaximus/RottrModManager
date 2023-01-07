@@ -11,7 +11,7 @@ namespace RottrModManager.Shared.Cdc
     public class ArchiveSet : IDisposable
     {
         private readonly Dictionary<int, Archive> _archives = new Dictionary<int, Archive>();
-        private readonly Dictionary<uint, ResourceCollectionReference> _resourceCollections = new Dictionary<uint, ResourceCollectionReference>();
+        private readonly Dictionary<HashAndLocale, ArchiveFileReference> _files = new Dictionary<HashAndLocale, ArchiveFileReference>();
 
         public ArchiveSet(string folderPath)
         {
@@ -32,9 +32,9 @@ namespace RottrModManager.Shared.Cdc
 
             foreach (Archive archive in GetSortedArchives())
             {
-                foreach (ResourceCollectionReference collection in archive.ResourceCollections)
+                foreach (ArchiveFileReference file in archive.Files)
                 {
-                    _resourceCollections[collection.NameHash] = collection;
+                    _files[new HashAndLocale(file)] = file;
                 }
             }
         }
@@ -51,7 +51,7 @@ namespace RottrModManager.Shared.Cdc
             return _archives.GetOrDefault(id);
         }
 
-        public IReadOnlyCollection<ResourceCollectionReference> ResourceCollections => _resourceCollections.Values;
+        public IReadOnlyCollection<ArchiveFileReference> Files => _files.Values;
 
         public Archive CreateModArchive(string modName, int maxResourceCollections)
         {
@@ -142,77 +142,74 @@ namespace RottrModManager.Shared.Cdc
 
         private void UpdateResourceReferences(List<Archive> sortedArchives, int startIndex, ITaskProgress progress, CancellationToken cancellationToken)
         {
-            _resourceCollections.Clear();
+            _files.Clear();
 
             for (int i = 0; i < startIndex; i++)
             {
-                foreach (ResourceCollectionReference collectionRef in sortedArchives[i].ResourceCollections)
+                foreach (ArchiveFileReference file in sortedArchives[i].Files)
                 {
-                    _resourceCollections[collectionRef.NameHash] = collectionRef;
+                    _files[new HashAndLocale(file)] = file;
                 }
             }
 
-            int totalCollections = 0;
+            int numTotalFiles = 0;
             for (int i = startIndex; i < sortedArchives.Count; i++)
             {
-                totalCollections += sortedArchives[i].ResourceCollections.Count;
+                numTotalFiles += sortedArchives[i].Files.Count;
             }
 
-            int updatedCollections = 0;
+            int numUpdatedFiles = 0;
             for (int i = startIndex; i < sortedArchives.Count; i++)
             {
-                foreach (ResourceCollectionReference collectionRef in sortedArchives[i].ResourceCollections)
+                foreach (ArchiveFileReference file in sortedArchives[i].Files)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
 
-                    updatedCollections++;
-                    progress.Report((float)updatedCollections / totalCollections);
+                    numUpdatedFiles++;
+                    progress.Report((float)numUpdatedFiles / numTotalFiles);
 
-                    ResourceCollectionReference prevCollectionRef = _resourceCollections.GetOrDefault(collectionRef.NameHash);
-                    if (prevCollectionRef == null)
+                    ArchiveFileReference prevFile = _files.GetOrDefault(new HashAndLocale(file));
+                    if (prevFile == null)
                     {
-                        _resourceCollections[collectionRef.NameHash] = collectionRef;
+                        _files[new HashAndLocale(file)] = file;
                         continue;
                     }
 
-                    ResourceCollection collection = GetResourceCollection(collectionRef);
-                    ResourceCollection prevCollection = GetResourceCollection(prevCollectionRef);
+                    ResourceCollection collection = GetResourceCollection(file);
+                    ResourceCollection prevCollection = GetResourceCollection(prevFile);
+                    if (collection == null || prevCollection == null)
+                        continue;
+
                     for (int j = 0; j < collection.ResourceReferences.Count; j++)
                     {
-                        if (collection.ResourceReferences[j].ArchiveId != collectionRef.ArchiveId)
+                        if (collection.ResourceReferences[j].ArchiveId != file.ArchiveId)
                             collection.UpdateResourceReference(j, prevCollection.ResourceReferences[j]);
                     }
 
-                    _resourceCollections[collectionRef.NameHash] = collectionRef;
+                    _files[new HashAndLocale(file)] = file;
                 }
             }
         }
 
-        public ResourceCollectionReference GetResourceCollectionReference(uint nameHash)
+        public ArchiveFileReference GetFileReference(uint nameHash, int locale = -1)
         {
-            _resourceCollections.TryGetValue(nameHash, out ResourceCollectionReference collection);
-            return collection;
+            _files.TryGetValue(new HashAndLocale(nameHash, locale), out ArchiveFileReference file);
+            return file;
         }
 
-        public ResourceCollection GetResourceCollection(uint nameHash)
+        public ResourceCollection GetResourceCollection(ArchiveFileReference file)
         {
-            ResourceCollectionReference collectionRef = GetResourceCollectionReference(nameHash);
-            return collectionRef != null ? GetResourceCollection(collectionRef) : null;
+            return _archives[file.ArchiveId].GetResourceCollection(file);
         }
 
-        public ResourceCollection GetResourceCollection(ResourceCollectionReference collectionRef)
-        {
-            return _archives[collectionRef.ArchiveId].GetResourceCollection(collectionRef);
-        }
-
-        public Stream GetResourceReadStream(ResourceReference resourceRef)
+        public Stream OpenResource(ResourceReference resourceRef)
         {
             return _archives[resourceRef.ArchiveId].OpenResource(resourceRef);
         }
 
-        public byte[] GetBytes(ArchiveItemReference itemRef)
+        public byte[] GetBlob(ArchiveBlobReference blobRef)
         {
-            return _archives[itemRef.ArchiveId].GetBytes(itemRef);
+            return _archives[blobRef.ArchiveId].GetBlob(blobRef);
         }
 
         private List<Archive> GetSortedArchives()
@@ -254,6 +251,49 @@ namespace RottrModManager.Shared.Cdc
                 archive.Dispose();
             }
             _archives.Clear();
+        }
+
+        private readonly struct HashAndLocale
+        {
+            public HashAndLocale(ArchiveFileReference file)
+            {
+                NameHash = file.NameHash;
+                Locale = file.Locale;
+            }
+
+            public HashAndLocale(uint nameHash, int locale)
+            {
+                NameHash = nameHash;
+                Locale = locale;
+            }
+
+            public uint NameHash
+            {
+                get;
+            }
+
+            public int Locale
+            {
+                get;
+            }
+
+            public bool Equals(HashAndLocale other)
+            {
+                return NameHash == other.NameHash && Locale == other.Locale;
+            }
+
+            public override bool Equals(object obj)
+            {
+                return obj is HashAndLocale other && Equals(other);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    return ((int)NameHash * 397) ^ Locale;
+                }
+            }
         }
     }
 }

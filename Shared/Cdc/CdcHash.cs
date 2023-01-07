@@ -1,7 +1,23 @@
-﻿namespace RottrModManager.Shared.Cdc
+﻿using System.Collections.Generic;
+using System.IO;
+using RottrModManager.Shared.Util;
+
+namespace RottrModManager.Shared.Cdc
 {
     public static class CdcHash
     {
+        private static readonly Dictionary<uint, string> LookupTable = new Dictionary<uint, string>();
+
+        public static void AddLookups(string filePath)
+        {
+            using StreamReader reader = new StreamReader(filePath);
+            string line;
+            while ((line = reader.ReadLine()) != null)
+            {
+                LookupTable[Calculate(line)] = line;
+            }
+        }
+
         public static uint Calculate(string str)
         {
             uint dwHash = 0xFFFFFFFFu;
@@ -22,6 +38,11 @@
                 }
             }
             return ~dwHash;
+        }
+
+        public static string Lookup(uint hash)
+        {
+            return LookupTable.GetOrDefault(hash);
         }
     }
 }

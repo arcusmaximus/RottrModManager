@@ -1,8 +1,8 @@
 ﻿namespace RottrModManager.Shared.Cdc
 {
-    public class ArchiveItemReference
+    public class ArchiveBlobReference
     {
-        public ArchiveItemReference(int archiveId, int archivePart, int offset, int length)
+        public ArchiveBlobReference(int archiveId, int archivePart, int offset, int length)
         {
             ArchiveId = archiveId;
             ArchivePart = archivePart;
@@ -30,7 +30,7 @@
             get;
         }
 
-        protected bool Equals(ArchiveItemReference other)
+        protected bool Equals(ArchiveBlobReference other)
         {
             return ArchiveId == other.ArchiveId &&
                    ArchivePart == other.ArchivePart &&
@@ -40,7 +40,7 @@
 
         public override bool Equals(object obj)
         {
-            return obj is ArchiveItemReference other && Equals(other);
+            return obj is ArchiveBlobReference other && Equals(other);
         }
 
         public override int GetHashCode()

@@ -2,13 +2,13 @@
 {
     public class ResourceCollectionItemReference
     {
-        public ResourceCollectionItemReference(ResourceCollectionReference collectionRef, int resourceIndex)
+        public ResourceCollectionItemReference(ArchiveFileReference collectionRef, int resourceIndex)
         {
             Collection = collectionRef;
             ResourceIndex = resourceIndex;
         }
 
-        public ResourceCollectionReference Collection
+        public ArchiveFileReference Collection
         {
             get;
         }

@@ -35,8 +35,8 @@ namespace RottrModManager.Shared.Cdc
         private readonly string _enabledNfoFilePath;
         private int _numParts = 1;
         private List<Stream> _partStreams;
-        private readonly List<ResourceCollectionReference> _collectionRefs = new List<ResourceCollectionReference>();
-        private int _maxResourceCollections;
+        private readonly List<ArchiveFileReference> _fileRefs = new List<ArchiveFileReference>();
+        private int _maxFiles;
 
         private Archive(string nfoFilePath, string baseFilePath)
         {
@@ -44,19 +44,14 @@ namespace RottrModManager.Shared.Cdc
             BaseFilePath = baseFilePath;
         }
 
-        public static Archive Create(
-            string baseFilePath,
-            int gameId,
-            int version,
-            int id,
-            int maxResourceCollections)
+        public static Archive Create(string baseFilePath, int gameId, int version, int id, int maxFiles)
         {
             string nfoFilePath = Path.ChangeExtension(baseFilePath, ".nfo");
             Archive archive = new Archive(nfoFilePath, baseFilePath)
                               {
                                   Id = id,
                                   MetaData = ArchiveMetaData.Create(nfoFilePath, gameId, version, id, id),
-                                  _maxResourceCollections = maxResourceCollections
+                                  _maxFiles = maxFiles
                               };
 
             Stream stream = File.Open(baseFilePath, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
@@ -66,11 +61,11 @@ namespace RottrModManager.Shared.Cdc
             writer.Write(0x53464154);   // Magic
             writer.Write(4);            // Version
             writer.Write(1);            // Number of parts
-            writer.Write(0);            // Number of resource collections
+            writer.Write(0);            // Number of files
             writer.Write(id);           // ID
-            writer.Write(Platform);
+            writer.Write(Platform);     // Platform
 
-            for (int i = 0; i < maxResourceCollections; i++)
+            for (int i = 0; i < maxFiles; i++)
             {
                 writer.Write(0);            // Hash
                 writer.Write(0);            // Locale
@@ -112,13 +107,13 @@ namespace RottrModManager.Shared.Cdc
 
             archive._numParts = reader.ReadInt32();
 
-            int numResourceCollections = reader.ReadInt32();
-            archive._maxResourceCollections = numResourceCollections;
+            int numFiles = reader.ReadInt32();
+            archive._maxFiles = numFiles;
 
             archive.Id = reader.ReadInt32();
 
             stream.Position = 0x34;
-            for (int i = 0; i < numResourceCollections; i++)
+            for (int i = 0; i < numFiles; i++)
             {
                 uint hash = reader.ReadUInt32();
                 int locale = reader.ReadInt32();
@@ -128,8 +123,7 @@ namespace RottrModManager.Shared.Cdc
                 short archiveId = reader.ReadInt16();
                 int offset = reader.ReadInt32();
 
-                if (locale == -1)
-                    archive._collectionRefs.Add(new ResourceCollectionReference(hash, archiveId, archivePart, offset, decompressedSize));
+                archive._fileRefs.Add(new ArchiveFileReference(hash, locale, archiveId, archivePart, offset, decompressedSize));
             }
 
             return archive;
@@ -144,8 +138,8 @@ namespace RottrModManager.Shared.Cdc
                     _partStreams = new List<Stream>();
                     for (int i = 0; i < _numParts; i++)
                     {
-                        string extraPartFilePath = GetPartFilePath(i);
-                        _partStreams.Add(File.Open(extraPartFilePath, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite));
+                        string partFilePath = GetPartFilePath(i);
+                        _partStreams.Add(File.Open(partFilePath, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite));
                     }
                 }
                 return _partStreams;
@@ -199,16 +193,23 @@ namespace RottrModManager.Shared.Cdc
             }
         }
 
-        public IReadOnlyCollection<ResourceCollectionReference> ResourceCollections => _collectionRefs;
+        public IReadOnlyCollection<ArchiveFileReference> Files => _fileRefs;
 
-        public ResourceCollection GetResourceCollection(ResourceCollectionReference collectionRef)
+        public ResourceCollection GetResourceCollection(ArchiveFileReference file)
         {
-            if (collectionRef.ArchiveId != Id)
+            if (file.ArchiveId != Id)
                 throw new ArgumentException();
 
-            Stream stream = PartStreams[collectionRef.ArchivePart];
-            stream.Position = collectionRef.Offset;
-            return new ResourceCollection(collectionRef.NameHash, stream);
+            Stream stream = PartStreams[file.ArchivePart];
+            stream.Position = file.Offset;
+            try
+            {
+                return new ResourceCollection(file.NameHash, stream);
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         public Stream OpenResource(ResourceReference resourceRef)
@@ -220,50 +221,50 @@ namespace RottrModManager.Shared.Cdc
             return new ResourceReadStream(stream, resourceRef, true);
         }
 
-        public byte[] GetBytes(ArchiveItemReference itemRef)
+        public byte[] GetBlob(ArchiveBlobReference blobRef)
         {
-            if (itemRef.ArchiveId != Id)
+            if (blobRef.ArchiveId != Id)
                 throw new ArgumentException();
 
-            byte[] data = new byte[itemRef.Length];
+            byte[] data = new byte[blobRef.Length];
 
-            Stream stream = PartStreams[itemRef.ArchivePart];
-            stream.Position = itemRef.Offset;
+            Stream stream = PartStreams[blobRef.ArchivePart];
+            stream.Position = blobRef.Offset;
             stream.Read(data, 0, data.Length);
             return data;
         }
 
-        public ResourceCollection AddResourceCollection(uint nameHash, byte[] data)
+        public ArchiveFileReference AddFile(uint nameHash, int locale, byte[] data)
         {
-            if (_collectionRefs.Count == _maxResourceCollections)
-                throw new InvalidOperationException("Can't add any further resource collections");
+            if (_fileRefs.Count == _maxFiles)
+                throw new InvalidOperationException("Can't add any further files");
 
-            Stream collectionStream = PartStreams.Last();
-            BinaryWriter collectionWriter = new BinaryWriter(collectionStream);
-            int offset = (int)collectionStream.Length;
-            collectionStream.Position = offset;
-            collectionWriter.Write(data);
+            Stream contentStream = PartStreams.Last();
+            BinaryWriter contentWriter = new BinaryWriter(contentStream);
+            int offset = (int)contentStream.Length;
+            contentStream.Position = offset;
+            contentWriter.Write(data);
 
             Stream indexStream = PartStreams[0];
             BinaryWriter indexWriter = new BinaryWriter(indexStream);
-            indexStream.Position = 0x34 + _collectionRefs.Count * 0x18;
+            indexStream.Position = 0x34 + _fileRefs.Count * 0x18;
             indexWriter.Write(nameHash);
-            indexWriter.Write(-1);
+            indexWriter.Write(locale);
             indexWriter.Write(data.Length);
             indexWriter.Write(0);
             indexWriter.Write((short)0);
             indexWriter.Write((short)Id);
             indexWriter.Write(offset);
 
-            _collectionRefs.Add(new ResourceCollectionReference(nameHash, Id, 0, offset, data.Length));
+            ArchiveFileReference fileRef = new ArchiveFileReference(nameHash, locale, Id, 0, offset, data.Length);
+            _fileRefs.Add(fileRef);
             indexStream.Position = 0xC;
-            indexWriter.Write(_collectionRefs.Count);
+            indexWriter.Write(_fileRefs.Count);
 
-            collectionStream.Position = offset;
-            return new ResourceCollection(nameHash, collectionStream);
+            return fileRef;
         }
 
-        public ArchiveItemReference AddResource(Stream contentStream)
+        public ArchiveBlobReference AddResource(Stream contentStream)
         {
             int archivePart = PartStreams.Count - 1;
             Stream partStream = PartStreams[archivePart];
@@ -287,7 +288,7 @@ namespace RottrModManager.Shared.Cdc
 
             writer.Write(LastResourceEndMarker);
 
-            return new ArchiveItemReference(Id, archivePart, resourceOffset, resourceLength);
+            return new ArchiveBlobReference(Id, archivePart, resourceOffset, resourceLength);
         }
 
         private void WriteResource(Stream contentStream, BinaryWriter writer)
@@ -348,7 +349,7 @@ namespace RottrModManager.Shared.Cdc
             }
         }
 
-        private string GetPartFilePath(int part)
+        public string GetPartFilePath(int part)
         {
             return BaseFilePath.Replace(".000.tiger", $".{part:d03}.tiger");
         }

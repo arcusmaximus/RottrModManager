@@ -25,7 +25,7 @@ namespace RottrModManager.Mod
 
         public override ResourceType GetResourceType(string filePath)
         {
-            return ResourceParser.GetType(filePath);
+            return ResourceNaming.GetType(filePath);
         }
 
         public override IEnumerable<(ResourceCollection, int)> GetResourceUsages(string resourceFilePath)

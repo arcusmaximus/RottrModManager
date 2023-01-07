@@ -16,7 +16,7 @@ namespace RottrModManager.Mod
         {
             _archive = Archive.Open(filePath);
 
-            foreach (ResourceCollectionReference collectionRef in _archive.ResourceCollections)
+            foreach (ArchiveFileReference collectionRef in _archive.Files)
             {
                 ResourceCollection collection = _archive.GetResourceCollection(collectionRef);
                 for (int resourceIdx = 0; resourceIdx < collection.ResourceReferences.Count; resourceIdx++)

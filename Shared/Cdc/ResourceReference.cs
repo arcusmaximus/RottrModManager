@@ -1,6 +1,6 @@
 ﻿namespace RottrModManager.Shared.Cdc
 {
-    public class ResourceReference : ArchiveItemReference
+    public class ResourceReference : ArchiveBlobReference
     {
         public ResourceReference(
             int archiveId,

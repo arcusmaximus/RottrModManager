@@ -27,7 +27,7 @@ namespace RottrModManager.Shared.Cdc
                 _usages.Clear();
 
                 int collectionIdx = 0;
-                foreach (ResourceCollectionReference collectionRef in _archiveSet.ResourceCollections)
+                foreach (ArchiveFileReference collectionRef in _archiveSet.Files)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
 
@@ -44,7 +44,7 @@ namespace RottrModManager.Shared.Cdc
 
                     for (int resourceIdx = 0; resourceIdx < collection.ResourceReferences.Count; resourceIdx++)
                     {
-                        string name = ResourceParser.GetName(_archiveSet, collection.ResourceReferences[resourceIdx]);
+                        string name = ResourceNaming.GetName(_archiveSet, collection.ResourceReferences[resourceIdx]);
                         if (name != null)
                         {
                             _usages.GetOrAdd(name, () => new List<ResourceUsage>())
@@ -53,7 +53,7 @@ namespace RottrModManager.Shared.Cdc
                     }
 
                     collectionIdx++;
-                    progress.Report((float)collectionIdx / _archiveSet.ResourceCollections.Count);
+                    progress.Report((float)collectionIdx / _archiveSet.Files.Count);
                 }
             }
             finally
@@ -70,7 +70,7 @@ namespace RottrModManager.Shared.Cdc
 
             foreach (ResourceUsage usage in usages)
             {
-                yield return new ResourceCollectionItemReference(_archiveSet.GetResourceCollectionReference(usage.CollectionNameHash), usage.ResourceIndex);
+                yield return new ResourceCollectionItemReference(_archiveSet.GetFileReference(usage.CollectionNameHash), usage.ResourceIndex);
             }
         }
 

@@ -145,14 +145,14 @@ namespace RottrModManager.Mod
 
                 Dictionary<string, List<ResourceCollectionItemReference>> modResourceUsages = GetModResourceUsages(modPackage);
 
-                List<ResourceCollectionReference> origCollections = modResourceUsages.Values
-                                                                                     .SelectMany(c => c)
-                                                                                     .Select(c => c.Collection)
-                                                                                     .Distinct()
-                                                                                     .ToList();
-                archive = _archiveSet.CreateModArchive(modName, origCollections.Count);
+                List<ArchiveFileReference> origCollectionRefs = modResourceUsages.Values
+                                                                                 .SelectMany(c => c)
+                                                                                 .Select(c => c.Collection)
+                                                                                 .Distinct()
+                                                                                 .ToList();
+                archive = _archiveSet.CreateModArchive(modName, origCollectionRefs.Count);
 
-                Dictionary<uint, ResourceCollection> newCollections = AddResourceCollections(archive, origCollections);
+                Dictionary<uint, ResourceCollection> newCollections = AddResourceCollections(archive, origCollectionRefs);
                 AddResources(archive, modPackage, modResourceUsages, newCollections, progress, cancellationToken);
 
                 _archiveSet.Add(archive, progress, cancellationToken);
@@ -190,7 +190,7 @@ namespace RottrModManager.Mod
             foreach (string resourceKey in modPackage.ResourceKeys)
             {
                 using Stream stream = modPackage.OpenResource(resourceKey);
-                string name = ResourceParser.GetName(stream, modPackage.GetResourceType(resourceKey));
+                string name = ResourceNaming.GetName(stream, modPackage.GetResourceType(resourceKey));
                 if (name != null && !modResourceNames.Values.Contains(name))
                     modResourceNames.Add(resourceKey, name);
             }
@@ -220,7 +220,7 @@ namespace RottrModManager.Mod
 
                 foreach ((ResourceCollection modCollection, int modResourceIdx) in modPackage.GetResourceUsages(resourceKey))
                 {
-                    ResourceCollectionReference gameCollectionRef = _archiveSet.GetResourceCollectionReference(modCollection.NameHash);
+                    ArchiveFileReference gameCollectionRef = _archiveSet.GetFileReference(modCollection.NameHash);
                     if (gameCollectionRef == null)
                         continue;
 
@@ -261,12 +261,13 @@ namespace RottrModManager.Mod
             }
         }
 
-        private Dictionary<uint, ResourceCollection> AddResourceCollections(Archive archive, List<ResourceCollectionReference> origCollections)
+        private Dictionary<uint, ResourceCollection> AddResourceCollections(Archive archive, List<ArchiveFileReference> origCollectionRefs)
         {
             Dictionary<uint, ResourceCollection> newCollections = new Dictionary<uint, ResourceCollection>();
-            foreach (ResourceCollectionReference origCollection in origCollections.OrderBy(c => c.NameHash))
+            foreach (ArchiveFileReference origCollectionRef in origCollectionRefs.OrderBy(c => c.NameHash))
             {
-                ResourceCollection newCollection = archive.AddResourceCollection(origCollection.NameHash, _archiveSet.GetBytes(origCollection));
+                ArchiveFileReference newCollectionRef = archive.AddFile(origCollectionRef.NameHash, -1, _archiveSet.GetBlob(origCollectionRef));
+                ResourceCollection newCollection = archive.GetResourceCollection(newCollectionRef);
                 newCollections.Add(newCollection.NameHash, newCollection);
             }
             return newCollections;
@@ -287,7 +288,7 @@ namespace RottrModManager.Mod
                 cancellationToken.ThrowIfCancellationRequested();
 
                 using Stream modResourceStream = modPackage.OpenResource(modResourceKey);
-                ArchiveItemReference newResource = archive.AddResource(modResourceStream);
+                ArchiveBlobReference newResource = archive.AddResource(modResourceStream);
                 foreach (ResourceCollectionItemReference collectionItemRef in collectionItemRefs)
                 {
                     ResourceCollection newCollection = newCollections[collectionItemRef.Collection.NameHash];
@@ -309,7 +310,7 @@ namespace RottrModManager.Mod
                 offsetInBatch = (offsetInBatch + 0xF) & ~0xF;
 
                 resourceIdx++;
-                progress.Report((float)resourceIdx / modResourceUsages.Count);
+                progress.Report((float)(resourceIdx + 1) / modResourceUsages.Count);
             }
         }
     }
