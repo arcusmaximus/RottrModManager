@@ -1,7 +1,7 @@
 # ROTTR Mod Manager
 Mod manager for Rise of the Tomb Raider.
 
-![Screenshot](Screenshot.png)
+![Screenshot](ManagerScreenshot.png)
 
 Features:
 * Version-independent. Mods that originally only worked on older versions of the game can now be installed in the newest one (and not just the Steam version).
