@@ -16,3 +16,9 @@ Limitations:
 * Text files in mods such as "Section 1060.txt", which are used for overwriting e.g. several different game textures with a single mod file, are not supported.
 
 [Download](https://github.com/arcusmaximus/RottrModManager/releases)
+
+# ROTTR Extractor
+
+Archive extractor for Rise of the Tomb Raider.
+
+![Screenshot](ExtractorScreenshot.png)
