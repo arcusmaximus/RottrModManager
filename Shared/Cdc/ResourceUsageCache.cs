@@ -26,7 +26,7 @@ namespace RottrModManager.Shared.Cdc
 
                 _usages.Clear();
 
-                int collectionIdx = 0;
+                int fileIdx = 0;
                 foreach (ArchiveFileReference collectionRef in _archiveSet.Files)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
@@ -34,7 +34,7 @@ namespace RottrModManager.Shared.Cdc
                     ResourceCollection collection = _archiveSet.GetResourceCollection(collectionRef);
                     if (collection == null)
                     {
-                        collectionIdx++;
+                        fileIdx++;
                         continue;
                     }
 
@@ -48,8 +48,8 @@ namespace RottrModManager.Shared.Cdc
                         }
                     }
 
-                    collectionIdx++;
-                    progress.Report((float)collectionIdx / _archiveSet.Files.Count);
+                    fileIdx++;
+                    progress.Report((float)fileIdx / _archiveSet.Files.Count);
                 }
             }
             finally
