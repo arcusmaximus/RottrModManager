@@ -7,6 +7,13 @@ namespace RottrModManager.Mod
 {
     internal abstract class ModPackage : IDisposable
     {
+        public abstract IEnumerable<ArchiveFileIdentifier> FileIdentifiers
+        {
+            get;
+        }
+
+        public abstract byte[] GetFileContent(ArchiveFileIdentifier fileId);
+
         public abstract IEnumerable<string> ResourceKeys
         {
             get;

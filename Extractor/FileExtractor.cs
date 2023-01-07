@@ -1,5 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using RottrModManager.Shared;
 using RottrModManager.Shared.Cdc;
@@ -30,7 +33,14 @@ namespace RottrExtractor
 
                     string filePath = Path.Combine(folderPath, file.Name);
                     if (file.Locale != -1)
-                        filePath = Path.Combine(filePath, $"Locale {file.Locale}" + Path.GetExtension(filePath));
+                    {
+                        string localeFileName = $"Locale {file.Locale:X08}";
+                        string localeName = GetLocaleName(file.Locale);
+                        if (localeName != null)
+                            localeFileName += " " + localeName;
+
+                        filePath = Path.Combine(filePath, localeFileName + Path.GetExtension(filePath));
+                    }
 
                     Directory.CreateDirectory(Path.GetDirectoryName(filePath));
                     File.WriteAllBytes(filePath, data);
@@ -43,6 +53,16 @@ namespace RottrExtractor
                 _archiveSet.CloseStreams();
                 progress.End();
             }
+        }
+
+        private static string GetLocaleName(int value)
+        {
+            foreach (Locale locale in Enum.GetValues(typeof(Locale)).Cast<Locale>().OrderBy(l => (int)l))
+            {
+                if (((int)locale & value) != 0)
+                    return Regex.Replace(locale.ToString(), @"(?<=[a-z])[A-Z0-9]", "-$0").ToLower();
+            }
+            return null;
         }
     }
 }

@@ -234,6 +234,11 @@ namespace RottrModManager.Shared.Cdc
             return data;
         }
 
+        public ArchiveFileReference AddFile(ArchiveFileIdentifier identifier, byte[] data)
+        {
+            return AddFile(identifier.NameHash, identifier.Locale, data);
+        }
+
         public ArchiveFileReference AddFile(uint nameHash, int locale, byte[] data)
         {
             if (_fileRefs.Count == _maxFiles)

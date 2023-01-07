@@ -15,11 +15,23 @@ namespace RottrExtractor
             _archiveSet = archiveSet;
         }
 
-        public void Extract(List<ResourceReference> resourceRefs, string folderPath, ITaskProgress progress, CancellationToken cancellationToken)
+        public void Extract(
+            ArchiveFileReference collectionRef,
+            List<ResourceReference> resourceRefs,
+            string folderPath,
+            ITaskProgress progress,
+            CancellationToken cancellationToken)
         {
             try
             {
                 progress.Begin("Extracting...");
+
+                string collectionFileName = Path.GetFileName(collectionRef.Name);
+                folderPath = Path.Combine(folderPath, Path.GetFileNameWithoutExtension(collectionFileName));
+                Directory.CreateDirectory(folderPath);
+
+                byte[] collectionBytes = _archiveSet.GetBlob(collectionRef);
+                File.WriteAllBytes(Path.Combine(folderPath, collectionFileName), collectionBytes);
 
                 for (int i = 0; i < resourceRefs.Count; i++)
                 {

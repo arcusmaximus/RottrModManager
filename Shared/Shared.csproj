@@ -51,6 +51,7 @@
   <ItemGroup>
     <Compile Include="Cdc\Archive.cs" />
     <Compile Include="Cdc\ArchiveBlobReference.cs" />
+    <Compile Include="Cdc\ArchiveFileIdentifier.cs" />
     <Compile Include="Cdc\ArchiveFileReference.cs" />
     <Compile Include="Cdc\ArchiveMetaData.cs" />
     <Compile Include="Cdc\ArchiveSet.cs" />

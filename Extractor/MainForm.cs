@@ -128,8 +128,7 @@ namespace RottrExtractor
             {
                 ResourceExtractor extractor = new ResourceExtractor(_archiveSet);
                 string folderPath = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
-                folderPath = Path.Combine(folderPath, Path.GetFileNameWithoutExtension(_tvFiles.ActiveFile.Name));
-                await Task.Run(() => extractor.Extract(resourceRefs, folderPath, this, _cancellationTokenSource.Token));
+                await Task.Run(() => extractor.Extract(_tvFiles.ActiveFile, resourceRefs, folderPath, this, _cancellationTokenSource.Token));
             }
             catch (Exception ex)
             {

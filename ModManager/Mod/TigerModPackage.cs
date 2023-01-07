@@ -3,22 +3,27 @@ using System.IO;
 using System.Linq;
 using RottrModManager.Shared.Cdc;
 using RottrModManager.Shared.Util;
-using RottrModManager.Util;
 
 namespace RottrModManager.Mod
 {
     internal class TigerModPackage : ModPackage
     {
         private readonly Archive _archive;
+        private readonly Dictionary<ArchiveFileIdentifier, ArchiveFileReference> _fileRefs = new Dictionary<ArchiveFileIdentifier, ArchiveFileReference>();
         private readonly Dictionary<int, ResourceInfo> _resources = new Dictionary<int, ResourceInfo>();
 
         public TigerModPackage(string filePath)
         {
             _archive = Archive.Open(filePath);
 
-            foreach (ArchiveFileReference collectionRef in _archive.Files)
+            foreach (ArchiveFileReference fileRef in _archive.Files)
             {
-                ResourceCollection collection = _archive.GetResourceCollection(collectionRef);
+                _fileRefs.Add(fileRef, fileRef);
+
+                ResourceCollection collection = _archive.GetResourceCollection(fileRef);
+                if (collection == null)
+                    continue;
+
                 for (int resourceIdx = 0; resourceIdx < collection.ResourceReferences.Count; resourceIdx++)
                 {
                     ResourceReference resourceRef = collection.ResourceReferences[resourceIdx];
@@ -26,9 +31,16 @@ namespace RottrModManager.Mod
                         continue;
 
                     ResourceInfo resourceInfo = _resources.GetOrAdd(resourceRef.Offset, () => new ResourceInfo(resourceRef));
-                    resourceInfo.Usages.Add(new ResourceCollectionItemReference(collectionRef, resourceIdx));
+                    resourceInfo.Usages.Add(new ResourceCollectionItemReference(fileRef, resourceIdx));
                 }
             }
+        }
+
+        public override IEnumerable<ArchiveFileIdentifier> FileIdentifiers => _archive.Files.Select(f => (ArchiveFileIdentifier)f);
+
+        public override byte[] GetFileContent(ArchiveFileIdentifier fileId)
+        {
+            return _archive.GetBlob(_fileRefs[fileId]);
         }
 
         public override IEnumerable<string> ResourceKeys
@@ -49,7 +61,7 @@ namespace RottrModManager.Mod
             ResourceInfo resourceInfo = _resources[int.Parse(key)];
             foreach (ResourceCollectionItemReference usage in resourceInfo.Usages)
             {
-                yield return (_archive.GetResourceCollection(usage.Collection), usage.ResourceIndex);
+                yield return (_archive.GetResourceCollection(usage.CollectionReference), usage.ResourceIndex);
             }
         }
 

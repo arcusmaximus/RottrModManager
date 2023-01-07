@@ -4,11 +4,11 @@
     {
         public ResourceCollectionItemReference(ArchiveFileReference collectionRef, int resourceIndex)
         {
-            Collection = collectionRef;
+            CollectionReference = collectionRef;
             ResourceIndex = resourceIndex;
         }
 
-        public ArchiveFileReference Collection
+        public ArchiveFileReference CollectionReference
         {
             get;
         }
@@ -20,7 +20,7 @@
 
         protected bool Equals(ResourceCollectionItemReference other)
         {
-            return Equals(Collection, other.Collection) &&
+            return Equals(CollectionReference, other.CollectionReference) &&
                    ResourceIndex == other.ResourceIndex;
         }
 
@@ -33,7 +33,7 @@
         {
             unchecked
             {
-                return (Collection.GetHashCode() * 397) ^ ResourceIndex;
+                return (CollectionReference.GetHashCode() * 397) ^ ResourceIndex;
             }
         }
     }

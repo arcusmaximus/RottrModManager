@@ -31,12 +31,8 @@ namespace RottrModManager.Shared.Cdc
                 {
                     cancellationToken.ThrowIfCancellationRequested();
 
-                    ResourceCollection collection;
-                    try
-                    {
-                        collection = _archiveSet.GetResourceCollection(collectionRef);
-                    }
-                    catch
+                    ResourceCollection collection = _archiveSet.GetResourceCollection(collectionRef);
+                    if (collection == null)
                     {
                         collectionIdx++;
                         continue;

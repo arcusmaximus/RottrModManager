@@ -11,7 +11,7 @@ namespace RottrModManager.Shared.Cdc
     public class ArchiveSet : IDisposable
     {
         private readonly Dictionary<int, Archive> _archives = new Dictionary<int, Archive>();
-        private readonly Dictionary<HashAndLocale, ArchiveFileReference> _files = new Dictionary<HashAndLocale, ArchiveFileReference>();
+        private readonly Dictionary<ArchiveFileIdentifier, ArchiveFileReference> _files = new Dictionary<ArchiveFileIdentifier, ArchiveFileReference>();
 
         public ArchiveSet(string folderPath)
         {
@@ -34,7 +34,7 @@ namespace RottrModManager.Shared.Cdc
             {
                 foreach (ArchiveFileReference file in archive.Files)
                 {
-                    _files[new HashAndLocale(file)] = file;
+                    _files[file] = file;
                 }
             }
         }
@@ -148,7 +148,7 @@ namespace RottrModManager.Shared.Cdc
             {
                 foreach (ArchiveFileReference file in sortedArchives[i].Files)
                 {
-                    _files[new HashAndLocale(file)] = file;
+                    _files[file] = file;
                 }
             }
 
@@ -168,10 +168,10 @@ namespace RottrModManager.Shared.Cdc
                     numUpdatedFiles++;
                     progress.Report((float)numUpdatedFiles / numTotalFiles);
 
-                    ArchiveFileReference prevFile = _files.GetOrDefault(new HashAndLocale(file));
+                    ArchiveFileReference prevFile = _files.GetOrDefault(file);
                     if (prevFile == null)
                     {
-                        _files[new HashAndLocale(file)] = file;
+                        _files[file] = file;
                         continue;
                     }
 
@@ -186,14 +186,19 @@ namespace RottrModManager.Shared.Cdc
                             collection.UpdateResourceReference(j, prevCollection.ResourceReferences[j]);
                     }
 
-                    _files[new HashAndLocale(file)] = file;
+                    _files[file] = file;
                 }
             }
         }
 
+        public ArchiveFileReference GetFileReference(ArchiveFileIdentifier fileId)
+        {
+            return GetFileReference(fileId.NameHash, fileId.Locale);
+        }
+
         public ArchiveFileReference GetFileReference(uint nameHash, int locale = -1)
         {
-            _files.TryGetValue(new HashAndLocale(nameHash, locale), out ArchiveFileReference file);
+            _files.TryGetValue(new ArchiveFileIdentifier(nameHash, locale), out ArchiveFileReference file);
             return file;
         }
 
@@ -251,49 +256,6 @@ namespace RottrModManager.Shared.Cdc
                 archive.Dispose();
             }
             _archives.Clear();
-        }
-
-        private readonly struct HashAndLocale
-        {
-            public HashAndLocale(ArchiveFileReference file)
-            {
-                NameHash = file.NameHash;
-                Locale = file.Locale;
-            }
-
-            public HashAndLocale(uint nameHash, int locale)
-            {
-                NameHash = nameHash;
-                Locale = locale;
-            }
-
-            public uint NameHash
-            {
-                get;
-            }
-
-            public int Locale
-            {
-                get;
-            }
-
-            public bool Equals(HashAndLocale other)
-            {
-                return NameHash == other.NameHash && Locale == other.Locale;
-            }
-
-            public override bool Equals(object obj)
-            {
-                return obj is HashAndLocale other && Equals(other);
-            }
-
-            public override int GetHashCode()
-            {
-                unchecked
-                {
-                    return ((int)NameHash * 397) ^ Locale;
-                }
-            }
         }
     }
 }

@@ -1,6 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Linq;
+using System.Text.RegularExpressions;
 using RottrModManager.Shared.Cdc;
 using RottrModManager.Shared.Util;
 
@@ -48,7 +51,7 @@ namespace RottrExtractor.Controls
                     }
                     else
                     {
-                        FileTreeNode prevLocaleNode = new FileTreeNode($"Locale {fileNode.File.Locale}")
+                        FileTreeNode prevLocaleNode = new FileTreeNode(GetLocaleFileName(fileNode.File.Locale))
                                                       {
                                                           File = fileNode.File,
                                                           Type = FileTreeNodeType.Locale,
@@ -56,7 +59,7 @@ namespace RottrExtractor.Controls
                                                       };
                         fileNode.Add(prevLocaleNode);
 
-                        FileTreeNode localeNode = new FileTreeNode($"Locale {file.Locale}")
+                        FileTreeNode localeNode = new FileTreeNode(GetLocaleFileName(file.Locale))
                                                   {
                                                       File = file,
                                                       Type = FileTreeNodeType.Locale,
@@ -69,7 +72,7 @@ namespace RottrExtractor.Controls
                 }
                 else
                 {
-                    FileTreeNode localeNode = new FileTreeNode($"Locale {file.Locale}")
+                    FileTreeNode localeNode = new FileTreeNode(GetLocaleFileName(file.Locale))
                                               {
                                                   File = file,
                                                   Type = FileTreeNodeType.Locale,
@@ -80,6 +83,20 @@ namespace RottrExtractor.Controls
             }
             archiveSet.CloseStreams();
             return rootNode;
+        }
+
+        private static string GetLocaleFileName(int value)
+        {
+            string fileName = $"Locale {value:X08}";
+            foreach (Locale locale in Enum.GetValues(typeof(Locale)).Cast<Locale>().OrderBy(l => (int)l))
+            {
+                if (((int)locale & value) != 0)
+                {
+                    fileName += " " + Regex.Replace(locale.ToString(), @"(?<=[a-z])[A-Z0-9]", "-$0").ToLower();
+                    break;
+                }
+            }
+            return fileName;
         }
     }
 }
