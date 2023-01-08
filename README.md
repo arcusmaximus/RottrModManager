@@ -22,3 +22,8 @@ Limitations:
 Archive extractor for Rise of the Tomb Raider.
 
 ![Screenshot](ExtractorScreenshot.png)
+
+# Credits
+Ekey for their open source [CDCE TIGER Tool](https://github.com/Ekey/CDCE.TIGER.Tool). The majority of the knowledge used to create these two tools comes from there.
+
+Indra and Raq for the filename hash lookup table that's included in the Extractor.
