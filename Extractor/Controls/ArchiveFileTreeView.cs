@@ -29,12 +29,6 @@ namespace RottrExtractor.Controls
             Populate(rootFileNode);
         }
 
-        protected override void CreateTreeNodes()
-        {
-            base.CreateTreeNodes();
-            _tvFiles.ExpandNode(_tvFiles.GetFirst());
-        }
-
         private static FileTreeNode CreateFileNodes(ArchiveSet archiveSet)
         {
             FileTreeNode rootNode = new FileTreeNode(null);
