@@ -63,8 +63,16 @@ namespace RottrModManager.Mod
             if (!match.Success)
                 yield break;
 
-            string folderPath = Path.GetDirectoryName(resourceFilePath);
-            string collectionFilePath = Directory.EnumerateFiles(folderPath, "*.drm").SingleOrDefault();
+            string folderPath = resourceFilePath;
+            string collectionFilePath;
+            do
+            {
+                folderPath = Path.GetDirectoryName(folderPath);
+                collectionFilePath = Directory.EnumerateFiles(folderPath, "*.drm").FirstOrDefault();
+                if (collectionFilePath != null)
+                    break;
+            } while (folderPath.Trim('\\') != _folderPath.Trim('\\'));
+            
             if (collectionFilePath == null)
                 yield break;
 
