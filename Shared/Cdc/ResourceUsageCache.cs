@@ -8,7 +8,7 @@ namespace RottrModManager.Shared.Cdc
     public class ResourceUsageCache
     {
         private const string FileName = "resourceusage.bin";
-        private const int Version = 1;
+        private const int Version = 2;
 
         private readonly ArchiveSet _archiveSet;
         private readonly Dictionary<string, List<ResourceUsage>> _usages = new Dictionary<string, List<ResourceUsage>>();

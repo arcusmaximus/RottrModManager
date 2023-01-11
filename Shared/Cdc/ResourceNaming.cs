@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Text.RegularExpressions;
 
 namespace RottrModManager.Shared.Cdc
 {
@@ -16,6 +17,7 @@ namespace RottrModManager.Shared.Cdc
                        ".psdres" => ResourceType.PsdRes,
                        ".script" => ResourceType.Script,
                        ".shader" => ResourceType.Shader,
+                       ".skl" => ResourceType.Dtp,
                        ".sound" => ResourceType.Sound,
                        ".tr2cmesh" => ResourceType.CollisionMesh,
                        ".tr2mesh" => ResourceType.Mesh,
@@ -52,11 +54,17 @@ namespace RottrModManager.Shared.Cdc
         {
             switch (type)
             {
+                case ResourceType.Material:
+                    return Sanitize(new CdcMaterial(stream).Name);
+                
                 case ResourceType.Mesh:
-                    return new CdcMesh(stream).Name;
+                    return Sanitize(new CdcMesh(stream).Name);
+
+                case ResourceType.Sound:
+                    return Sanitize(new CdcSound(stream).Name);
 
                 case ResourceType.Texture:
-                    return new CdcTexture(stream).Name;
+                    return Sanitize(new CdcTexture(stream).Name);
 
                 default:
                     return null;
@@ -67,7 +75,9 @@ namespace RottrModManager.Shared.Cdc
         {
             switch (resourceRef.Type)
             {
+                case ResourceType.Material:
                 case ResourceType.Mesh:
+                case ResourceType.Sound:
                 case ResourceType.Texture:
                 {
                     using Stream stream = archiveSet.OpenResource(resourceRef);
@@ -82,7 +92,27 @@ namespace RottrModManager.Shared.Cdc
         public static string GetFilePath(ArchiveSet archiveSet, ResourceReference resourceRef, int resourceIdx)
         {
             string name = GetName(archiveSet, resourceRef) ?? $"Section {resourceIdx:d04}";
-            return name + GetExtension(resourceRef.Type);
+            string extension = GetExtension(resourceRef.Type);
+            if (resourceRef.Type == ResourceType.Dtp)
+            {
+                using Stream stream = archiveSet.OpenResource(resourceRef);
+                if (stream.Length > 4)
+                {
+                    BinaryReader reader = new BinaryReader(stream);
+                    if (reader.ReadInt32() == 6)
+                        extension = ".skl";
+                }
+            }
+
+            return name + extension;
+        }
+
+        private static string Sanitize(string name)
+        {
+            if (name == null)
+                return null;
+
+            return Regex.Replace(name, @"[^- \.\w\\]", "_");
         }
     }
 }

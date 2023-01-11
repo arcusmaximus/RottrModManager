@@ -59,7 +59,9 @@
     <Compile Include="Cdc\ArchiveMetaData.cs" />
     <Compile Include="Cdc\ArchiveSet.cs" />
     <Compile Include="Cdc\CdcHash.cs" />
+    <Compile Include="Cdc\CdcMaterial.cs" />
     <Compile Include="Cdc\CdcMesh.cs" />
+    <Compile Include="Cdc\CdcSound.cs" />
     <Compile Include="Cdc\CdcTexture.cs" />
     <Compile Include="Cdc\Enumerations.cs" />
     <Compile Include="Cdc\ResourceCollection.cs" />
