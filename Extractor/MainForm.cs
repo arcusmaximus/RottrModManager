@@ -28,6 +28,9 @@ namespace RottrExtractor
         public MainForm(string gameFolderPath)
             : this()
         {
+            Version version = Assembly.GetEntryAssembly().GetName().Version;
+            Text += $" {version.Major}.{version.Minor}.{version.Build}";
+
             _archiveSet = new ArchiveSet(gameFolderPath);
 
             string exeFolderPath = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);

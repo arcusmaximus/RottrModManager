@@ -109,7 +109,7 @@ namespace RottrModManager.Shared.Cdc
 
         private static string Sanitize(string name)
         {
-            if (name == null)
+            if (name == null || name.StartsWith("Section "))
                 return null;
 
             return Regex.Replace(name, @"[^- \.\w\\]", "_");
