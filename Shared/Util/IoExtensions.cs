@@ -11,7 +11,7 @@ namespace RottrModManager.Shared.Util
         public static string ReadZeroTerminatedString(this BinaryReader reader)
         {
             int length = 0;
-            while (true)
+            while (reader.BaseStream.Position < reader.BaseStream.Length)
             {
                 byte b = reader.ReadByte();
                 if (b == 0)
