@@ -47,6 +47,7 @@ namespace RottrModManager.Mod
         {
             List<ArchiveInfo> originalArchives = new List<ArchiveInfo>();
             foreach (Archive archive in _archiveSet.Archives
+                                                   .Concat(_archiveSet.DuplicateArchives)
                                                    .Where(a => a.ModName != null)
                                                    .OrderByDescending(a => a.MetaData.Version))
             {

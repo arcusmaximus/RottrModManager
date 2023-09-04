@@ -11,6 +11,7 @@ namespace RottrModManager.Shared.Cdc
     public class ArchiveSet : IDisposable
     {
         private readonly Dictionary<int, Archive> _archives = new Dictionary<int, Archive>();
+        private readonly List<Archive> _duplicateArchives = new List<Archive>();
         private readonly Dictionary<ArchiveFileIdentifier, ArchiveFileReference> _files = new Dictionary<ArchiveFileIdentifier, ArchiveFileReference>();
 
         public ArchiveSet(string folderPath)
@@ -27,7 +28,10 @@ namespace RottrModManager.Shared.Cdc
                     continue;
 
                 Archive archive = Archive.Open(archiveFilePath);
-                _archives.Add(archive.Id, archive);
+                if (!_archives.ContainsKey(archive.Id))
+                    _archives.Add(archive.Id, archive);
+                else
+                    _duplicateArchives.Add(archive);
             }
 
             foreach (Archive archive in GetSortedArchives())
@@ -45,6 +49,8 @@ namespace RottrModManager.Shared.Cdc
         }
 
         public IReadOnlyCollection<Archive> Archives => _archives.Values;
+
+        public IReadOnlyCollection<Archive> DuplicateArchives => _duplicateArchives;
 
         public Archive GetArchive(int id)
         {
@@ -137,7 +143,8 @@ namespace RottrModManager.Shared.Cdc
             Disable(archive, progress, $"Removing mod {archive.ModName}...", cancellationToken);
             archive.Delete();
             archive.Dispose();
-            _archives.Remove(archive.Id);
+            if (!_duplicateArchives.Remove(archive))
+                _archives.Remove(archive.Id);
         }
 
         private void UpdateResourceReferences(List<Archive> sortedArchives, int startIndex, ITaskProgress progress, CancellationToken cancellationToken)
@@ -243,7 +250,7 @@ namespace RottrModManager.Shared.Cdc
 
         public void CloseStreams()
         {
-            foreach (Archive archive in _archives.Values)
+            foreach (Archive archive in _archives.Values.Concat(_duplicateArchives))
             {
                 archive.CloseStreams();
             }
@@ -251,11 +258,12 @@ namespace RottrModManager.Shared.Cdc
 
         public void Dispose()
         {
-            foreach (Archive archive in _archives.Values)
+            foreach (Archive archive in _archives.Values.Concat(_duplicateArchives))
             {
                 archive.Dispose();
             }
             _archives.Clear();
+            _duplicateArchives.Clear();
         }
     }
 }

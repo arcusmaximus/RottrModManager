@@ -10,7 +10,6 @@ using RottrModManager.Mod;
 using RottrModManager.Shared;
 using RottrModManager.Shared.Cdc;
 using RottrModManager.Shared.Util;
-using RottrModManager.Util;
 
 namespace RottrModManager
 {
@@ -53,6 +52,10 @@ namespace RottrModManager
                 await Task.Run(() => _resourceUsageCache.Refresh(this, _cancellationTokenSource.Token));
                 _resourceUsageCache.Save();
 
+                await ReinstallMods();
+            }
+            else if (_archiveSet.DuplicateArchives.Count > 0)
+            {
                 await ReinstallMods();
             }
         }

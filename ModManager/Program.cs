@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.ExceptionServices;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -38,11 +41,17 @@ namespace RottrModManager
 
             try
             {
+                bool reinstallMods = archiveSet.DuplicateArchives.Count > 0;
+
                 if (!resourceUsageCache.Load())
                 {
                     RunTaskWithProgress(resourceUsageCache.Refresh);
                     resourceUsageCache.Save();
+                    reinstallMods = true;
+                }
 
+                if (reinstallMods)
+                {
                     ModInstaller installer = new ModInstaller(archiveSet, resourceUsageCache);
                     RunTaskWithProgress((progress, cancellationToken) => installer.ReinstallAll(progress, cancellationToken));
                 }
