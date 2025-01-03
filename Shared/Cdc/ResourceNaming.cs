@@ -52,40 +52,54 @@ namespace RottrModManager.Shared.Cdc
 
         public static string GetName(Stream stream, ResourceType type)
         {
-            switch (type)
+            try
             {
-                case ResourceType.Material:
-                    return Sanitize(new CdcMaterial(stream).Name);
-                
-                case ResourceType.Mesh:
-                    return Sanitize(new CdcMesh(stream).Name);
+                switch (type)
+                {
+                    case ResourceType.Material:
+                        return Sanitize(new CdcMaterial(stream).Name);
 
-                case ResourceType.Sound:
-                    return Sanitize(new CdcSound(stream).Name);
+                    case ResourceType.Mesh:
+                        return Sanitize(new CdcMesh(stream).Name);
 
-                case ResourceType.Texture:
-                    return Sanitize(new CdcTexture(stream).Name);
+                    case ResourceType.Sound:
+                        return Sanitize(new CdcSound(stream).Name);
 
-                default:
-                    return null;
+                    case ResourceType.Texture:
+                        return Sanitize(new CdcTexture(stream).Name);
+
+                    default:
+                        return null;
+                }
+            }
+            catch
+            {
+                return null;
             }
         }
 
         public static string GetName(ArchiveSet archiveSet, ResourceReference resourceRef)
         {
-            switch (resourceRef.Type)
+            try
             {
-                case ResourceType.Material:
-                case ResourceType.Mesh:
-                case ResourceType.Sound:
-                case ResourceType.Texture:
+                switch (resourceRef.Type)
                 {
-                    using Stream stream = archiveSet.OpenResource(resourceRef);
-                    return GetName(stream, resourceRef.Type);
-                }
+                    case ResourceType.Material:
+                    case ResourceType.Mesh:
+                    case ResourceType.Sound:
+                    case ResourceType.Texture:
+                        {
+                            using Stream stream = archiveSet.OpenResource(resourceRef);
+                            return GetName(stream, resourceRef.Type);
+                        }
 
-                default:
-                    return null;
+                    default:
+                        return null;
+                }
+            }
+            catch
+            {
+                return null;
             }
         }
 
